@@ -2,17 +2,17 @@ name: Build APK and Deploy Web
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -25,23 +25,32 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: zulu
+          java-version: "17"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
+
+      - name: Generate Android and Web platform files
+        run: flutter create . --org com.rachit.ojas --project-name ojas_mobile --platforms=android,web
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Web
-        run: flutter build web --base-href "/Ojas-mobile/"
+      - name: Analyze Project
+        run: flutter analyze
+
+      - name: Run Tests
+        run: flutter test
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
+
+      - name: Build Web
+        run: flutter build web --release --base-href "/Ojas-mobile/"
 
       - name: Upload Web Artifact
         uses: actions/upload-pages-artifact@v3
@@ -56,6 +65,7 @@ jobs:
         with:
           name: ojas-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
 
   deploy:
     environment:
@@ -67,4 +77,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
