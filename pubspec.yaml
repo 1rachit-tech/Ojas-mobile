@@ -1,6 +1,7 @@
 name: ojas
-description: OJAS modern Flutter mobile application.
+description: OJAS modern Flutter cross-platform application.
 publish_to: "none"
+
 version: 1.0.0+1
 
 environment:
@@ -9,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   cupertino_icons: ^1.0.8
   firebase_core: ^3.15.2
   firebase_auth: ^5.7.0
