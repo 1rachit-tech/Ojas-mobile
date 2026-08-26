@@ -1,29 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'screens/dashboard_screen.dart';
+import 'screens/main_scaffold.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const OjasApp());
+  runApp(
+    ChangeNotifierProvider<ThemeController>(
+      create: (_) => ThemeController(),
+      child: const OjasApp(),
+    ),
+  );
 }
 
-class OjasApp extends StatefulWidget {
+class ThemeController extends ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  ThemeMode get themeMode => _themeMode;
+
+  void setThemeMode(ThemeMode value) {
+    if (_themeMode == value) {
+      return;
+    }
+    _themeMode = value;
+    notifyListeners();
+  }
+
+  void toggleBrightness(Brightness brightness) {
+    setThemeMode(
+      brightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark,
+    );
+  }
+}
+
+class OjasApp extends StatelessWidget {
   const OjasApp({super.key});
 
   @override
-  State<OjasApp> createState() => _OjasAppState();
-}
-
-class _OjasAppState extends State<OjasApp> {
-  ThemeMode _themeMode = ThemeMode.system;
-
-  @override
   Widget build(BuildContext context) {
-    final lightColorScheme = ColorScheme.fromSeed(
+    final themeController = context.watch<ThemeController>();
+    final lightScheme = ColorScheme.fromSeed(
       seedColor: const Color(0xFF6750A4),
       brightness: Brightness.light,
     );
-    final darkColorScheme = ColorScheme.fromSeed(
+    final darkScheme = ColorScheme.fromSeed(
       seedColor: const Color(0xFF6750A4),
       brightness: Brightness.dark,
     );
@@ -31,25 +51,18 @@ class _OjasAppState extends State<OjasApp> {
     return MaterialApp(
       title: 'OJAS',
       debugShowCheckedModeBanner: false,
-      themeMode: _themeMode,
+      themeMode: themeController.themeMode,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: lightColorScheme,
-        scaffoldBackgroundColor: lightColorScheme.surface,
+        colorScheme: lightScheme,
+        scaffoldBackgroundColor: lightScheme.surface,
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
-        colorScheme: darkColorScheme,
-        scaffoldBackgroundColor: darkColorScheme.surface,
+        colorScheme: darkScheme,
+        scaffoldBackgroundColor: darkScheme.surface,
       ),
-      home: DashboardScreen(
-        themeMode: _themeMode,
-        onThemeModeChanged: (ThemeMode mode) {
-          setState(() {
-            _themeMode = mode;
-          });
-        },
-      ),
+      home: const MainScaffold(),
     );
   }
 }
