@@ -1,94 +1,70 @@
-name: Build Android APK and Deploy Web
+name: Build APK and Deploy Web
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: ojas-pages
-  cancel-in-progress: true
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
-    name: Build Android APK and Web
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: "17"
+          distribution: 'zulu'
+          java-version: '17'
 
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: 'stable'
           cache: true
 
-      - name: Generate Flutter platform projects
-        run: flutter create --platforms=android,web .
-
-      - name: Restore GitHub Pages base path
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('web/index.html')
-          text = path.read_text(encoding='utf-8')
-          text = text.replace('<base href="/">', '<base href="/Ojas-mobile/">')
-          path.write_text(text, encoding='utf-8')
-          PY
-
-      - name: Get dependencies
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Analyze project
-        run: flutter analyze
+      - name: Build Web
+        run: flutter build web --base-href "/Ojas-mobile/"
 
-      - name: Run tests
-        run: flutter test
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
-      - name: Build Debug APK
-        run: flutter build apk --debug
-
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: OJAS-Debug-APK
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Build Flutter Web
-        run: flutter build web --release --base-href /Ojas-mobile/
-
-      - name: Upload GitHub Pages artifact
+      - name: Upload Web Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
 
+      - name: Build Debug APK
+        run: flutter build apk --debug
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ojas-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+
   deploy:
-    name: Deploy Web to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
+    runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
