@@ -19,20 +19,36 @@ class _OjasAppState extends State<OjasApp> {
 
   @override
   Widget build(BuildContext context) {
-    final lightScheme = ColorScheme.fromSeed(seedColor: const Color(0xFF6750A4));
-    final darkScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFFD0BCFF),
+    final lightColorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF6750A4),
+      brightness: Brightness.light,
+    );
+    final darkColorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF6750A4),
       brightness: Brightness.dark,
     );
+
     return MaterialApp(
       title: 'OJAS',
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode,
-      theme: ThemeData(useMaterial3: true, colorScheme: lightScheme),
-      darkTheme: ThemeData(useMaterial3: true, colorScheme: darkScheme),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: lightColorScheme,
+        scaffoldBackgroundColor: lightColorScheme.surface,
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: darkColorScheme,
+        scaffoldBackgroundColor: darkColorScheme.surface,
+      ),
       home: DashboardScreen(
         themeMode: _themeMode,
-        onThemeModeChanged: (mode) => setState(() => _themeMode = mode),
+        onThemeModeChanged: (ThemeMode mode) {
+          setState(() {
+            _themeMode = mode;
+          });
+        },
       ),
     );
   }
